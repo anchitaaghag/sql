@@ -161,10 +161,10 @@ VALUES(col1,col2,col3,col4,col5)
 */
 --QUERY 10
 
--- adding this here to be deleted
+-- Delete temp table if the table already exists
 DROP TABLE IF EXISTS temp.new_vendor;
 
--- actual code
+-- Create the temp table
 CREATE TABLE temp.new_vendor AS
 SELECT *
 FROM vendor;
@@ -178,12 +178,11 @@ INSERT INTO temp.new_vendor(
 		)
 VALUES(
 		10,
-		"Thomass Superfood Store",
-		"Fresh Focused",
+		'Thomass Superfood Store',
+		'Fresh Focused',
 		'Thomas',
 		'Rosenthal'
 		);
-
 
 --END QUERY
 
@@ -196,8 +195,11 @@ and year are!
 Limit to 25 rows of output. */
 --QUERY 11
 
-
-
+SELECT customer_id,
+		strftime('%m', market_date) AS month,
+		strftime('%Y', market_date) AS year
+FROM customer_purchases
+LIMIT 25;
 
 --END QUERY
 
@@ -210,7 +212,15 @@ but remember, STRFTIME returns a STRING for your WHERE statement...
 AND be sure you remove the LIMIT from the previous query before aggregating!! */
 --QUERY 12
 
-
-
+SELECT 
+		cp.customer_id,
+		c.customer_first_name,
+		c.customer_last_name,
+		ROUND(SUM(cp.quantity * cp.cost_to_customer_per_qty), 2) AS total_spend_2022_04
+FROM customer_purchases AS cp
+INNER JOIN customer AS c 
+ON cp.customer_id = c.customer_id
+WHERE strftime('%Y-%m', cp.market_date) = '2022-04'
+GROUP BY cp.customer_id;
 
 --END QUERY
