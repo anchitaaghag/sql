@@ -212,8 +212,7 @@ but remember, STRFTIME returns a STRING for your WHERE statement...
 AND be sure you remove the LIMIT from the previous query before aggregating!! */
 --QUERY 12
 
-SELECT 
-		cp.customer_id,
+SELECT cp.customer_id,
 		c.customer_first_name,
 		c.customer_last_name,
 		ROUND(SUM(cp.quantity * cp.cost_to_customer_per_qty), 2) AS total_spend_2022_04
