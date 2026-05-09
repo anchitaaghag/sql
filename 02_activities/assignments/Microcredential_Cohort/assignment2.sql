@@ -143,6 +143,39 @@ HINT: There are a possibly a few ways to do this query, but if you're struggling
 with a UNION binding them. */
 --QUERY 7
 
+-- If a table named sales_values_grouped_dates exists, delete it
+DROP TABLE IF EXISTS temp.sales_values_grouped_dates;
+
+-- Create temp table for sales per market_date
+CREATE TABLE temp.sales_values_grouped_dates AS
+SELECT market_date,
+		SUM(quantity * cost_to_customer_per_qty) AS total_sales
+FROM customer_purchases
+GROUP BY market_date;
+
+-- Next, create temp table for best/worst dates
+-- If a table named ranked_sales_per_mrktdate exists, delete it
+DROP TABLE IF EXISTS temp.ranked_sales_per_mrktdate;
+
+-- Create temp table
+CREATE TABLE temp.ranked_sales_per_mrktdate AS
+SELECT market_date,
+		total_sales,
+		RANK() OVER(ORDER BY total_sales DESC) AS best_day,
+		RANK() OVER(ORDER BY total_sales ASC) AS worst_day
+FROM temp.sales_values_grouped_dates;
+
+SELECT market_date,
+		ROUND(total_sales,2),
+		'Highest Total Sales' AS note
+FROM temp.ranked_sales_per_mrktdate
+WHERE best_day = 1
+UNION
+SELECT market_date, 
+		ROUND(total_sales,2),
+		'Lowest Total Sales' AS note
+FROM temp.ranked_sales_per_mrktdate
+WHERE worst_day = 1;
 
 --END QUERY
 
@@ -162,6 +195,19 @@ How many customers are there (y).
 Before your final group by you should have the product of those two queries (x*y).  */
 --QUERY 8
 
+-- Number of DISTINCT vendors x =3
+SELECT DISTINCT vendor_id
+FROM vendor_inventory;
+-- three
+
+
+-- # of DISTINCT? product names x
+
+
+
+-- # of customers y = 26
+SELECT DISTINCT customer_id
+FROM customer_purchases;
 
 
 --END QUERY
@@ -216,7 +262,7 @@ HINT: If you don't specify a WHERE clause, you are going to have a bad time.*/
 --QUERY 11
 
 DELETE FROM product_units
-WHERE product_id = 100 ;
+WHERE product_id = 100;
 
 --END QUERY
 
@@ -239,7 +285,16 @@ Finally, make sure you have a WHERE statement to update the right row,
 When you have all of these components, you can run the update statement. */
 --QUERY 12
 
+ALTER TABLE product_units
+ADD current_quantity INT;
 
+UPDATE product_units
+SET current_quantity = COALESCE((
+		SELECT quantity 
+		FROM vendor_inventory AS vi 
+		WHERE vi.product_id = product_units.product_id 
+		ORDER BY market_date DESC 
+		LIMIT 1), 0);
 
 --END QUERY
 
