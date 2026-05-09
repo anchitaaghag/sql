@@ -153,11 +153,10 @@ SELECT market_date,
 FROM customer_purchases
 GROUP BY market_date;
 
--- Next, create temp table for best/worst dates
 -- If a table named ranked_sales_per_mrktdate exists, delete it
 DROP TABLE IF EXISTS temp.ranked_sales_per_mrktdate;
 
--- Create temp table
+-- Create second temp table for best/worst dates
 CREATE TABLE temp.ranked_sales_per_mrktdate AS
 SELECT market_date,
 		total_sales,
@@ -165,6 +164,7 @@ SELECT market_date,
 		RANK() OVER(ORDER BY total_sales ASC) AS worst_day
 FROM temp.sales_values_grouped_dates;
 
+-- Display market dates with the highest and lowest total sales
 SELECT market_date,
 		ROUND(total_sales,2),
 		'Highest Total Sales' AS note
@@ -195,25 +195,20 @@ How many customers are there (y).
 Before your final group by you should have the product of those two queries (x*y).  */
 --QUERY 8
 
--- Number of DISTINCT vendors 3
-SELECT DISTINCT vendor_id
-FROM vendor_inventory;
--- three
-
-
--- # of DISTINCT VENDORS' product names ie. of the three how many does each have? x =8
-
-SELECT DISTINCT vendor_id, 
-	product_id, 
-	original_price * 5
-FROM vendor_inventory;
-
--- # of customers y = 26
-SELECT DISTINCT customer_id
-FROM customer;
-
---? So Confusing! Cross join really diffucult to wrap my head around. As numbers sure 8*5*26 = ans.,
--- but this is asking to use the names?? instead of IDs?
+SELECT v.vendor_name,
+		p.product_name,
+		ROUND(SUM(5 * vi.original_price),2) AS potential_sales_total
+FROM (
+		SELECT DISTINCT vendor_id, 
+				product_id, 
+				original_price 
+		FROM vendor_inventory) AS vi
+JOIN vendor AS v ON vi.vendor_id = v.vendor_id
+JOIN product AS p ON vi.product_id = p.product_id
+CROSS JOIN (
+		SELECT customer_id 
+		FROM customer)
+GROUP BY v.vendor_name, p.product_name;
 
 --END QUERY
 
