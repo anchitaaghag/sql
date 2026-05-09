@@ -23,8 +23,22 @@ Edit the appropriate columns -- you're making two edits -- and the NULL rows wil
 All the other rows will remain the same. */
 --QUERY 1
 
+-- 1) Find the rows with null values
+SELECT * 
+FROM product 
+WHERE product_id IS NULL
+OR product_name IS NULL
+OR product_size IS NULL 
+OR product_category_id IS NULL
+OR product_qty_type IS NULL;
 
+-- Two rows with missing product_size and product_qty_type
+-- 2) Coalesce the columns to form the list
 
+SELECT 
+product_name || ', ' || COALESCE(product_size, '') || ' (' || COALESCE(product_qty_type, 'unit') || ')'
+AS Product_Long_List
+FROM product;
 
 --END QUERY
 
