@@ -37,7 +37,7 @@ OR product_qty_type IS NULL;
 
 SELECT 
 product_name || ', ' || COALESCE(product_size, '') || ' (' || COALESCE(product_qty_type, 'unit') || ')'
-AS Product_Long_List
+AS products_long_list
 FROM product;
 
 --END QUERY
@@ -55,8 +55,13 @@ HINT: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK().
 Filter the visits to dates before April 29, 2022. */
 --QUERY 2
 
-
-
+-- Use DENSE_RANK() to number unique market dates per customer
+SELECT customer_id,
+		market_date,
+		product_id,
+		DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY market_date ASC) AS visit_numbers
+FROM customer_purchases
+WHERE strftime('%Y-%m-%d', market_date) < '2022-04-29';
 
 --END QUERY
 
@@ -67,8 +72,14 @@ only the customer’s most recent visit.
 HINT: Do not use the previous visit dates filter. */
 --QUERY 3
 
-
-
+SELECT *
+FROM (
+    SELECT customer_id,
+			market_date,
+			ROW_NUMBER() OVER(PARTITION BY customer_id ORDER BY market_date DESC) AS visit_numbers
+    FROM customer_purchases
+) AS customer_recent_visits
+WHERE customer_recent_visits.visit_numbers = 1;
 
 --END QUERY
 
@@ -80,8 +91,12 @@ You can make this a running count by including an ORDER BY within the PARTITION 
 Filter the visits to dates before April 29, 2022. */
 --QUERY 4
 
-
-
+SELECT customer_id,
+		market_date,
+		product_id,
+		COUNT(product_id) OVER(PARTITION BY customer_id, product_id) AS no_of_times_purchased
+FROM customer_purchases
+WHERE strftime('%Y-%m-%d', market_date) < '2022-04-29';
 
 --END QUERY
 
@@ -99,8 +114,10 @@ Remove any trailing or leading whitespaces. Don't just use a case statement for 
 Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR will help split the column. */
 --QUERY 5
 
-
-
+SELECT product_name,
+		TRIM(SUBSTR(product_name, INSTR(product_name, '-') + 1)) AS description
+FROM product
+WHERE INSTR(product_name, '-') > 0;
 
 --END QUERY
 
@@ -108,8 +125,9 @@ Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR w
 /* 2. Filter the query to show any product_size value that contain a number with REGEXP. */
 --QUERY 6
 
-
-
+SELECT *
+FROM product
+WHERE product_size REGEXP '[0-9]';
 
 --END QUERY
 
@@ -124,8 +142,6 @@ HINT: There are a possibly a few ways to do this query, but if you're struggling
 3) Query the second temp table twice, once for the best day, once for the worst day, 
 with a UNION binding them. */
 --QUERY 7
-
-
 
 
 --END QUERY
@@ -148,7 +164,6 @@ Before your final group by you should have the product of those two queries (x*y
 
 
 
-
 --END QUERY
 
 
@@ -159,8 +174,13 @@ It should use all of the columns from the product table, as well as a new column
 Name the timestamp column `snapshot_timestamp`. */
 --QUERY 9
 
+DROP TABLE IF EXISTS product_units;
 
-
+CREATE TABLE product_units AS 
+SELECT *,
+		CURRENT_TIMESTAMP AS snapshot_timestamp
+FROM product
+WHERE product_qty_type = 'unit';
 
 --END QUERY
 
@@ -169,8 +189,22 @@ Name the timestamp column `snapshot_timestamp`. */
 This can be any product you desire (e.g. add another record for Apple Pie). */
 --QUERY 10
 
-
-
+INSERT INTO product_units (
+		product_id, 
+		product_name, 
+		product_size, 
+		product_category_id, 
+		product_qty_type, 
+		snapshot_timestamp
+		)
+VALUES (
+		100, 
+		'Blueberry Pie', 
+		'12" ', 
+		3, 
+		'unit', 
+		CURRENT_TIMESTAMP
+		);
 
 --END QUERY
 
@@ -181,8 +215,8 @@ This can be any product you desire (e.g. add another record for Apple Pie). */
 HINT: If you don't specify a WHERE clause, you are going to have a bad time.*/
 --QUERY 11
 
-
-
+DELETE FROM product_units
+WHERE product_id = 100 ;
 
 --END QUERY
 
@@ -204,7 +238,6 @@ Finally, make sure you have a WHERE statement to update the right row,
 	you'll need to use product_units.product_id to refer to the correct row within the product_units table. 
 When you have all of these components, you can run the update statement. */
 --QUERY 12
-
 
 
 
