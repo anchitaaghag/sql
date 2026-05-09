@@ -195,20 +195,25 @@ How many customers are there (y).
 Before your final group by you should have the product of those two queries (x*y).  */
 --QUERY 8
 
--- Number of DISTINCT vendors x =3
+-- Number of DISTINCT vendors 3
 SELECT DISTINCT vendor_id
 FROM vendor_inventory;
 -- three
 
 
--- # of DISTINCT? product names x
+-- # of DISTINCT VENDORS' product names ie. of the three how many does each have? x =8
 
-
+SELECT DISTINCT vendor_id, 
+	product_id, 
+	original_price * 5
+FROM vendor_inventory;
 
 -- # of customers y = 26
 SELECT DISTINCT customer_id
-FROM customer_purchases;
+FROM customer;
 
+--? So Confusing! Cross join really diffucult to wrap my head around. As numbers sure 8*5*26 = ans.,
+-- but this is asking to use the names?? instead of IDs?
 
 --END QUERY
 
