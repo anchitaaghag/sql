@@ -56,8 +56,22 @@ The store wants to keep customer addresses. Propose two architectures for the CU
 **HINT:** search type 1 vs type 2 slowly changing dimensions. 
 
 ```
-Your answer...
+Please note: My answer to Prompt 3 has been typed below this code block. This is not within the triple backticks provided since I wanted to used markdown to bold, italicize (e.g. APA citations), and format my answer accordingly.
 ```
+
+In my two entity relationship diagrams - [ERD 1](assignment2_logical_model_1.pdf) and [ERD 2](assignment2_logical_model_2.pdf), I have included the address information in the `customer` table. To create a `customer_address` table, I would remove the address details from the `customer` table and move it to this new table.
+
+For an architecture Type 1 Slowly Changing Dimensions (SCD), the `customer_address` table would overwrite old address information with new address information.
+This table would have a primary key called `customer_id`. Columns could include information such as: `street_address`, `province_state`, `postal_code`,`city`, and `country`. Each `customer_id` would be associated wih only one row of address information. A customer’s address can be modified using an `UPDATE` statement. The benefit of this type of architecture is that the table will be compact in design and only contain the most updated records. However, we may not be able to track the historical changes. For example, a customer who is a teacher may want books delivered to their classroom during the academic term but to their personal home address during the summer. This would result in modifying the table constantly, which in turn could result in books delivered to the wrong location. 
+
+For an architecture Type 2 SCD, the `customer_address` table would track the various customers' addresses by creating a new row for each new address. Similar to type 1 SCD above, columns could include information such as: `street_address`, `province_state`, `postal_code`,`city`, and `country`. However, each `customer_id` could be ssociated with multiples rows of addresses. Hence, we would need a unique primary key (such as `address_id`) while keeping `customer_id` as a foreign key. A customer's latest address can be added using `INSERT INTO` and `VALUES`. Lastly, a new column such as `status` (i.e, binary; 1 for current address, 0 for old address) could be used to track different versions. Alternatively, new columns that specify when the address should be used (e.g. `valid_from` and `valid_to`) that specify that the address changed on a particular date can also be used. For example, in the aformentioned example, for the schoolteacher, we could designate `valid_from` as 1 September and `valid_to` 30 June to ensure books are delivered to the school during the academic year.
+
+***References***
+
+Merced, A. (2026, Feb 20).*Slowly Changing Dimensions: Types 1-3 with Examples*. Dev. https://dev.to/alexmercedcoder/slowly-changing-dimensions-types-1-3-with-examples-4751
+
+Schott, M. (2026, May 6). *What Are Slowly Changing Dimensions? A Complete Guide*. ThoughtSpot. https://www.thoughtspot.com/data-trends/data-modeling/slowly-changing-dimensions-in-data-warehouse
+
 
 ***
 
